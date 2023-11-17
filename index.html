@@ -110,9 +110,17 @@
     integrity="sha512-M7U+gxFY3QgEWIEWjmBITT1ad7xSET9AWuZAKyOuV2Wlo/4TT4ZLLgq8+qG5TdYm0BCWRYjSvc7/QXJ/fJrmZg=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script >
- var  _DOC  =""
-;    var _SEARCH = "";
+
+if(!window.location.search.includes("view")){
+  location.href = (location.href+"?view=").replaceAll("??","?")
+}
+    const urlParams = new URLSearchParams(window.location.search);
+    const view_from_url = urlParams.get('view');
+
+    var VIEW_CONTEXT =view_from_url||"";
+    var _SEARCH = "";
     var _DEPTH = "";
+    var _DOC ="";
 // A more performance-optimized version of the app_log function.
 
 (function () {
@@ -389,7 +397,7 @@ var myDiagram;
 
 function displayGoJS(obj, search = "", depth = 0) {
  var  optn = obj .optn ;
- optn.vertical =  !optn.vertical ;
+ optn.vertical = optn.vertical !== false ?true:  optn.vertical ;
  optn.center = optn.center||false;
 
  document.getElementById('myDiagramDiv').style .backgroundColor = optn.color ||  document.getElementById('myDiagramDiv').style .backgroundColor;
@@ -436,8 +444,8 @@ function displayGoJS(obj, search = "", depth = 0) {
         /*
         //vertical
         */
-        angle: optn.vertical ? 0:90,
-        arrangement: optn.vertical? go.TreeLayout.ArrangementVertical:go.TreeLayout.ArrangementHorizontal,
+        angle: optn.vertical ? 90:0,
+        //arrangement: optn.vertical? go.TreeLayout.ArrangementVertical:go.TreeLayout.ArrangementHorizontal,
 
 
 
@@ -546,13 +554,14 @@ function displayGoJS(obj, search = "", depth = 0) {
               }
             } else {
               if (theUrl) {
-                window.open(theUrl, "_blank");
+                location.href=theUrl;//, "_blank");
               } else {
                 textBox.value +=
                   " ^" + node.data.key.replaceAll(" ", "*") + "$";
+                  triggerSearchProcess(textBox);
               }
             }
-            triggerSearchProcess(textBox);
+           
 
             if (node) {
               var data = node.data;
@@ -732,16 +741,21 @@ function triggerSearchProcess(textBox) {
 }
 
 function extractUrl(text) {
+  
   // Regular expression to match URLs
   const urlRegex = /(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
 
   // Use the regular expression to find a URL in the text
   const match = text.match(urlRegex);
-
+ 
   if (match) {
+   
     // If a URL is found, return it
     return match[0];
   } else {
+    if(!VIEW_CONTEXT){
+      return location.href.split('?')[0]+"?view="+text;
+     }
     // If no URL is found, return false
     return false;
   }
@@ -1447,8 +1461,18 @@ function formatVisualizationInput(input, vimp) {
   return res;
 }
 
-function loadAndRender() {
-  var storedData = localStorage.getItem("conceptMapData");
+function loadAndRender() { 
+   if(VIEW_CONTEXT){
+    var menu = localStorage.getItem("conceptMapData") ||`
+    {
+      color:yellow
+      vertical: false
+      links : links
+    }
+      `;
+  if(!menu.includes(VIEW_CONTEXT)) localStorage.setItem("conceptMapData", menu+'\nWORK SPACES?green  - '+VIEW_CONTEXT+'?yellow');
+ }
+  var storedData = localStorage.getItem(VIEW_CONTEXT+"conceptMapData");
   createVisualization(
     createVisualizationInput(storedData || _DOC),
     _SEARCH,
@@ -1457,61 +1481,13 @@ function loadAndRender() {
 }
 
 function createInputAndDropdown() {
-  //   document.getElementById("addButton").addEventListener("click", function () {
-  //     const newItem = prompt("Enter a new item:");
-  //     if (newItem) {
-  //         // Add the new item to local storage
-  //         addToLocalStorage(newItem);
-  //     }
-  // });
 
-  // function addToLocalStorage(item) {
-  //     // Get existing items from local storage or initialize an empty array
-  //     let items = JSON.parse(localStorage.getItem("items")) || [];
-
-  //     // Add the new item to the array
-  //     items.push(item);
-
-  //     // Store the updated array back in local storage
-  //     localStorage.setItem("items", JSON.stringify(items));
-
-  //     // Populate the dropdown
-  //     populateDropdown();
-  // }
-  // function populateDropdown() {
-  //     const select = document.getElementById("depthSelect");
-  //     select.innerHTML = ""; // Clear the current dropdown options
-
-  //     // Get items from local storage
-  //     const items = JSON.parse(localStorage.getItem("items")) || [];
-
-  //     // Add each item as an option in the dropdown
-  //     items.forEach((item, index) => {
-  //         const option = document.createElement("option");
-  //         option.value = index;
-  //         option.text = item;
-  //         select.appendChild(option);
-  //     });
-  // }
-
-  // // Call the populateDropdown function initially to populate the dropdown
-  // populateDropdown();
-  // document.getElementById("depthSelect").addEventListener("change", function () {
-  //     const selectedIndex = this.value;
-  //     const items = JSON.parse(localStorage.getItem("items")) || [];
-  //     if (selectedIndex >= 0 && selectedIndex < items.length) {
-  //         const selectedValue = items[selectedIndex];
-  //         CURRENT_KEY = selectedValue; // Store the selected item in CURRENT_KEY
-  //         localStorage.setItem("CURRENT_KEY", CURRENT_KEY); // Store the key in local storage
-  //     }
-  // });
 
   var textBox = document.getElementById("searchBox"); //.value.toLowerCase();
   var dropdown = document.getElementById("depthSelect");
 
-  //dropdown.value = localStorage.getItem("dropdownValue") || "1";
 
-  textBox.value = localStorage.getItem("textBoxValue") || "";
+  textBox.value = localStorage.getItem(VIEW_CONTEXT+"textBoxValue") || "";
 
   searchDiagram(textBox.value);
 
@@ -1529,8 +1505,7 @@ function createInputAndDropdown() {
   // dropdown.addEventListener("change", handler);
 }
 function saveToLocalStorage(text, number) {
-  localStorage.setItem("textBoxValue", text);
-  //localStorage.setItem("dropdownValue", number);
+  localStorage.setItem(VIEW_CONTEXT+"textBoxValue", text);
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -1540,7 +1515,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
   </script>
- 
+  
   <script>
 
     function toggleDataEntry() {
@@ -1552,7 +1527,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (dataEntryDiv.style.display === "flex") {
         document.getElementById("coding_text_area").value =
-          localStorage.getItem("conceptMapData") || "";
+          localStorage.getItem(VIEW_CONTEXT+"conceptMapData") || "";
         mainContent.style.marginLeft = "25%"; // Adjust this to match the width of your fullscreen2 div
       } else {
         mainContent.style.marginLeft = "0";
@@ -1653,7 +1628,10 @@ function saveAndRender(leaveopen) {
     if(!formattedText){
     //  document.getElementById("searchBox").value = "";
     }
-      localStorage.setItem("conceptMapData", formattedText);
+    var appendHome = "";
+   
+      localStorage.setItem(VIEW_CONTEXT+"conceptMapData", appendHome+formattedText);
+    
       loadAndRender();
       if (!leaveopen) toggleDataEntry();
     }
