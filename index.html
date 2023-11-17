@@ -111,7 +111,8 @@
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script >
 
-
+    var _SEARCH = "";
+    var _DEPTH = "";
 // A more performance-optimized version of the app_log function.
 
 (function () {
@@ -1445,6 +1446,7 @@ function formatVisualizationInput(input, vimp) {
   app_log("🔥", res);
   return res;
 }
+
 function loadAndRender() {
   var storedData = localStorage.getItem("conceptMapData");
   createVisualization(
